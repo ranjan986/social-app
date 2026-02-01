@@ -1,0 +1,231 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom Colors - Tailwind v4 Format */
+  --color-bg-dark: #050505;
+  --color-bg-card: #141414;
+  --color-primary: #0095f6;
+  --color-primary-hover: #1877f2;
+  --color-secondary: #e1306c;
+  --color-text-main: #FAFAFA;
+  --color-text-muted: #A3A3A3;
+  --color-border-color: #262626;
+  --color-input-bg: #262626;
+}
+
+/* CSS Variables for Light Theme Toggle */
+:root {
+  --bg-dark: #050505;
+  --bg-card: #141414;
+  --primary: #0095f6;
+  --primary-hover: #1877f2;
+  --secondary: #e1306c;
+  --text-main: #FAFAFA;
+  --text-muted: #A3A3A3;
+  --border-color: #262626;
+  --input-bg: #262626;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body.light-theme {
+  --bg-dark: #fafafa;
+  --bg-card: #ffffff;
+  --text-main: #262626;
+  --text-muted: #737373;
+  --border-color: #dbdbdb;
+  --input-bg: #f0f0f0;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-image: none !important;
+}
+
+/* Base Styles */
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-dark);
+  background-image: radial-gradient(circle at 50% 0%, #1e1e24 0%, #000000 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Toggle Switch for Light/Dark Mode */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #525252;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked+.slider {
+  background-color: var(--primary);
+}
+
+input:checked+.slider:before {
+  transform: translateX(24px);
+}
+
+/* Legacy CSS classes for compatibility */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--input-bg);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 14px;
+  resize: none;
+  transition: all 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  background: var(--input-bg);
+  border-color: var(--primary);
+}
+
+/* Responsive Utilities */
+.hide-on-mobile {
+  display: block;
+}
+
+.hide-on-desktop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .hide-on-desktop {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .hide-on-tablet {
+    display: none !important;
+  }
+}
+
+/* Home Layout Grid */
+.home-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+@media (max-width: 1000px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .home-layout aside {
+    display: none;
+  }
+}
+
+/* Enhancements for Mobile Feed */
+@media (max-width: 768px) {
+  .home-layout {
+    padding: 0;
+    gap: 0;
+  }
+
+  .home-layout .card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin-bottom: 5px;
+  }
+
+  /* Adjust Modal for Mobile */
+  .modal-content {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+}

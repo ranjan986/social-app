@@ -3,12 +3,12 @@ import { getAuth } from "firebase/auth";
 
 // TODO: User must replace this with their real Firebase Config
 const firebaseConfig = {
-    apiKey: "AIzaSyAT1J2njoqKX_mXEJ-d17rqy703HLmRg34",
-    authDomain: "social-app-93d3e.firebaseapp.com",
-    projectId: "social-app-93d3e",
-    storageBucket: "social-app-93d3e.firebasestorage.app",
-    messagingSenderId: "61552326796",
-    appId: "1:61552326796:web:88dce822ea43531f4fe3a9"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);

@@ -12,6 +12,7 @@ const StoryList = () => {
     const [isPaused, setIsPaused] = useState(false);
     const [progress, setProgress] = useState(0);
     const [showViewers, setShowViewers] = useState(false);
+    const [showLikeAnimation, setShowLikeAnimation] = useState(false);
 
     // Constants
     const STORY_DURATION = 5000; // 5 seconds per image
@@ -139,33 +140,49 @@ const StoryList = () => {
     const handleResume = () => setIsPaused(false);
 
     const handleLike = async (e, storyId) => {
-        e.stopPropagation();
+        if (e) e.stopPropagation();
+
+        const story = selectedStoryUser.stories.find(s => s._id === storyId);
+        const currentUserId = user?._id || user?.id;
+        const isLiked = story.likes?.some(id => String(id) === String(currentUserId));
+
+        // Optimistic UI Update immediately
+        const optimisticStory = {
+            ...story,
+            likes: isLiked
+                ? story.likes.filter(id => String(id) !== String(currentUserId))
+                : [...(story.likes || []), currentUserId]
+        };
+        updateLocalStory(optimisticStory);
+
+        if (!isLiked) {
+            setShowLikeAnimation(true);
+            setTimeout(() => setShowLikeAnimation(false), 1000);
+        }
+
         try {
-            const res = await api.put(`/stories/${storyId}/like`);
-            const updatedStory = res.data;
-
-            // Update in local state
-            setStories(prevStories => prevStories.map(group => {
-                const storyIndex = group.stories.findIndex(s => s._id === storyId);
-                if (storyIndex > -1) {
-                    const newStories = [...group.stories];
-                    newStories[storyIndex] = updatedStory;
-                    return { ...group, stories: newStories };
-                }
-                return group;
-            }));
-
-            // Update selected view if open
-            if (selectedStoryUser) {
-                const newStories = [...selectedStoryUser.stories];
-                const idx = newStories.findIndex(s => s._id === storyId);
-                if (idx > -1) {
-                    newStories[idx] = updatedStory;
-                    setSelectedStoryUser({ ...selectedStoryUser, stories: newStories });
-                }
-            }
+            await api.put(`/stories/${storyId}/like`);
+            // No need to wait for response if optimistic, but good to sync eventually usually.
+            // But we already updated local.
         } catch (err) {
             console.error(err);
+            // Revert on error? For now, keep simple.
+        }
+    };
+
+    // Simple double click handler
+    const handleDoubleClick = (e) => {
+        e.stopPropagation();
+        const storyId = selectedStoryUser.stories[currentStoryIndex]._id;
+        // Only like if not already liked? Or toggle? Instagram toggles or just likes.
+        // Usually double tap ALWAYS likes (does nothing if already liked).
+        const story = selectedStoryUser.stories[currentStoryIndex];
+        const currentUserId = user?._id || user?.id;
+        if (!story.likes?.some(id => String(id) === String(currentUserId))) {
+            handleLike(null, storyId);
+        } else {
+            setShowLikeAnimation(true);
+            setTimeout(() => setShowLikeAnimation(false), 1000);
         }
     };
 
@@ -193,6 +210,27 @@ const StoryList = () => {
         } catch (err) {
             console.error(err);
             alert("Failed to delete story");
+        }
+    };
+
+    const updateLocalStory = (updatedStory) => {
+        setStories(prevStories => prevStories.map(group => {
+            const storyIndex = group.stories.findIndex(s => s._id === updatedStory._id);
+            if (storyIndex > -1) {
+                const newStories = [...group.stories];
+                newStories[storyIndex] = updatedStory;
+                return { ...group, stories: newStories };
+            }
+            return group;
+        }));
+
+        if (selectedStoryUser) {
+            const newStories = [...selectedStoryUser.stories];
+            const idx = newStories.findIndex(s => s._id === updatedStory._id);
+            if (idx > -1) {
+                newStories[idx] = updatedStory;
+                setSelectedStoryUser({ ...selectedStoryUser, stories: newStories });
+            }
         }
     };
 
@@ -262,7 +300,7 @@ const StoryList = () => {
                             </div>
                         </div>
                         <span style={{ fontSize: '11px', color: '#fff', maxWidth: '70px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                            {s.user._id === user?.id ? 'Your Story' : s.user.name.split(' ')[0]}
+                            {(String(s.user._id) === String(user?._id || user?.id)) ? 'Your Story' : s.user.name.split(' ')[0]}
                         </span>
                     </div>
                 ))}
@@ -304,7 +342,10 @@ const StoryList = () => {
                         </div>
 
                         {/* Story Content */}
-                        <div style={{ flex: 1, background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <div
+                            style={{ flex: 1, background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+                            onDoubleClick={handleDoubleClick}
+                        >
                             {selectedStoryUser.stories[currentStoryIndex].type === 'video' ? (
                                 <video
                                     src={selectedStoryUser.stories[currentStoryIndex].media}
@@ -318,6 +359,19 @@ const StoryList = () => {
                                     alt="Story"
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
+                            )}
+
+                            {/* Like Animation Heart */}
+                            {showLikeAnimation && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '50%', left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    animation: 'likeBounce 0.8s ease-out forwards',
+                                    zIndex: 25
+                                }}>
+                                    <Heart size={120} fill="white" color="white" />
+                                </div>
                             )}
 
                             {/* User Info */}
@@ -337,8 +391,8 @@ const StoryList = () => {
                                 >
                                     <Heart
                                         size={28}
-                                        fill={selectedStoryUser.stories[currentStoryIndex].likes?.includes(user?._id) ? "#ef4444" : "none"}
-                                        color={selectedStoryUser.stories[currentStoryIndex].likes?.includes(user?._id) ? "#ef4444" : "white"}
+                                        fill={selectedStoryUser.stories[currentStoryIndex].likes?.some(id => String(id) === String(user?._id || user?.id)) ? "#ef4444" : "none"}
+                                        color={selectedStoryUser.stories[currentStoryIndex].likes?.some(id => String(id) === String(user?._id || user?.id)) ? "#ef4444" : "white"}
                                     />
                                     {selectedStoryUser.stories[currentStoryIndex].likes?.length > 0 && (
                                         <span style={{ color: 'white', fontWeight: 'bold' }}>{selectedStoryUser.stories[currentStoryIndex].likes.length}</span>
@@ -347,13 +401,18 @@ const StoryList = () => {
                             </div>
 
                             {/* Owner Actions: Delete & Views */}
-                            {selectedStoryUser.user._id === user?._id && (
+                            {(String(selectedStoryUser.user._id) === String(user?._id || user?.id)) && (
                                 <>
                                     <button
                                         onClick={(e) => handleDelete(e, selectedStoryUser.stories[currentStoryIndex]._id)}
-                                        style={{ position: 'absolute', top: '25px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', zIndex: 20 }}
+                                        style={{
+                                            position: 'absolute', top: '25px', right: '15px',
+                                            background: 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', zIndex: 100,
+                                            width: '32px', height: '32px', borderRadius: '50%',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                        }}
                                     >
-                                        <Trash2 size={20} color="white" />
+                                        <Trash2 size={18} color="white" />
                                     </button>
 
                                     <button
@@ -379,9 +438,18 @@ const StoryList = () => {
                                 {selectedStoryUser.stories[currentStoryIndex].viewers?.length > 0 ? (
                                     <div style={{ color: 'white' }}>
                                         {/* In a real app, populate with user data. Currently just IDs unless populated */}
-                                        {selectedStoryUser.stories[currentStoryIndex].viewers.map(viewerId => (
-                                            <div key={viewerId} style={{ padding: '10px 0', borderBottom: '1px solid #333' }}>
-                                                User {viewerId.slice(-4)}
+                                        {selectedStoryUser.stories[currentStoryIndex].viewers.map(viewer => (
+                                            <div key={viewer._id} style={{ padding: '10px 0', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#333', overflow: 'hidden' }}>
+                                                    {viewer.avatar ? (
+                                                        <img src={viewer.avatar} alt={viewer.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px' }}>
+                                                            {viewer.name?.[0]}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span style={{ color: 'white' }}>{viewer.name}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -392,8 +460,9 @@ const StoryList = () => {
                         )}
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

@@ -29,6 +29,7 @@ const Home = () => {
     const [activePostId, setActivePostId] = useState(null);
     const [commentText, setCommentText] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [animatingPostId, setAnimatingPostId] = useState(null);
 
     // ... (useEffect and fetchPosts same)
 
@@ -109,12 +110,42 @@ const Home = () => {
         }
     };
 
+    const handlePostDoubleTap = (postId) => {
+        console.log('Double tap detected on:', postId);
+        setAnimatingPostId(postId);
+        setTimeout(() => setAnimatingPostId(null), 1000);
+
+        const post = posts.find(p => p._id === postId);
+        const currentUserId = user?._id || user?.id;
+        const isLiked = post.likes?.some(id => String(id) === String(currentUserId));
+
+        if (!isLiked) {
+            handleLike(postId);
+        }
+    };
+
     const handleLike = async (postId) => {
+        const currentUserId = user?._id || user?.id;
+
+        // Optimistic update
+        setPosts(prevPosts => prevPosts.map(p => {
+            if (p._id === postId) {
+                const isLiked = p.likes?.some(id => String(id) === String(currentUserId));
+                const newLikes = isLiked
+                    ? p.likes.filter(id => String(id) !== String(currentUserId))
+                    : [...(p.likes || []), currentUserId];
+                return { ...p, likes: newLikes };
+            }
+            return p;
+        }));
+
         try {
             await api.put(`/posts/${postId}/like`);
-            fetchPosts();
+            // fetchPosts(); // No need to re-fetch if optimistic, gives smoother feel. 
+            // Only re-fetch if error or background sync needed.
         } catch (err) {
             console.error(err);
+            fetchPosts(); // Revert on error
         }
     };
 
@@ -281,7 +312,10 @@ const Home = () => {
                                     </div>
 
                                     {mediaItem && (
-                                        <div style={{ width: '100%', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                                        <div
+                                            style={{ width: '100%', overflow: 'hidden', marginBottom: '0.5rem', position: 'relative' }}
+                                            onClick={() => handleTouchTap(post._id)}
+                                        >
                                             {isVid ? (
                                                 <video
                                                     src={mediaItem}
@@ -295,13 +329,27 @@ const Home = () => {
                                                     style={{ width: '100%', maxHeight: '700px', objectFit: 'contain' }} // Maintain aspect ratio better
                                                 />
                                             )}
+
+                                            {/* Like Animation */}
+                                            {animatingPostId === post._id && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '50%', left: '50%',
+                                                    transform: 'translate(-50%, -50%)',
+                                                    animation: 'likeBounce 0.8s ease-out forwards',
+                                                    zIndex: 10,
+                                                    pointerEvents: 'none'
+                                                }}>
+                                                    <Heart size={100} fill="white" color="white" />
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
                                     {/* Actions */}
                                     <div className="card-footer" style={{ display: 'flex', gap: '1.5rem', borderTop: 'none' }}>
-                                        <button onClick={() => handleLike(post._id)} style={{ background: 'none', border: 'none', color: post.likes?.includes(user?._id) ? '#ec4899' : '#fff', cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                            <Heart size={24} fill={post.likes?.includes(user?._id) ? '#ec4899' : 'none'} />
+                                        <button onClick={() => handleLike(post._id)} style={{ background: 'none', border: 'none', color: post.likes?.some(id => String(id) === String(user?._id || user?.id)) ? '#ec4899' : '#fff', cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <Heart size={24} fill={post.likes?.some(id => String(id) === String(user?._id || user?.id)) ? '#ec4899' : 'none'} />
                                         </button>
                                         <button onClick={() => toggleComments(post._id)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                             <MessageCircle size={24} strokeWidth={2} />

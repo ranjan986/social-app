@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { Heart, MessageCircle, Share2, Music, Camera } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Reels = () => {
     const [reels, setReels] = useState([]);
@@ -53,7 +54,17 @@ const Reels = () => {
 
 const ReelItem = ({ reel }) => {
     const videoRef = useRef(null);
+    const { user } = useAuth();
     const [liked, setLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(reel.likes?.length || 0);
+
+    // Initialize like state
+    useEffect(() => {
+        if (user && reel.likes) {
+            const isLiked = reel.likes.some(id => String(id) === String(user._id || user.id));
+            setLiked(isLiked);
+        }
+    }, [user, reel.likes]);
 
     // Simple Intersection Observer to play/pause
     useEffect(() => {
@@ -72,7 +83,28 @@ const ReelItem = ({ reel }) => {
         return () => observer.disconnect();
     }, []);
 
-    const toggleLike = () => setLiked(!liked);
+    const toggleLike = async () => {
+        if (!user) {
+            alert("Please login to like");
+            return;
+        }
+
+        const prevLiked = liked;
+        const prevCount = likeCount;
+
+        // Optimistic Update
+        setLiked(!liked);
+        setLikeCount(prev => liked ? prev - 1 : prev + 1);
+
+        try {
+            await api.put(`/posts/${reel._id}/like`);
+        } catch (err) {
+            console.error(err);
+            // Revert on error
+            setLiked(prevLiked);
+            setLikeCount(prevCount);
+        }
+    };
 
     return (
         <div style={{
@@ -92,7 +124,7 @@ const ReelItem = ({ reel }) => {
                 style={{ height: '100%', width: '100%', objectFit: 'cover', maxWidth: '500px' }}
                 loop
                 playsInline
-                muted // Start muted usually, but let's try auto
+            // muted // Start muted usually, but let's try auto
             />
 
             {/* Gradient Overlay */}
@@ -132,7 +164,7 @@ const ReelItem = ({ reel }) => {
             }}>
                 <div onClick={toggleLike} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                     <Heart size={28} fill={liked ? '#ff3040' : 'transparent'} color={liked ? '#ff3040' : 'white'} strokeWidth={2} />
-                    <span style={{ fontSize: '13px', fontWeight: '600' }}>{reel.likes.length + (liked ? 1 : 0)}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600' }}>{likeCount}</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                     <MessageCircle size={28} strokeWidth={2} />

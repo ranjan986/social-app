@@ -9,6 +9,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
 
     useEffect(() => {
         checkUserLoggedIn();
@@ -18,14 +19,10 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('token');
         if (token) {
             try {
-                // Assume we have an endpoint to get current user data. 
-                // If not, we rely on what we stored or add an endpoint.
-                // Assuming backend has /auth/me or similar. 
-                // Based on routes I saw, maybe not? I saw 'login', 'register'.
-                // I'll check authRoutes.js later. For now, let's persist user in localStorage too or try to fetch.
                 const storedUser = localStorage.getItem('user');
                 if (storedUser) {
                     setUser(JSON.parse(storedUser));
+                    fetchUnreadNotifications(); // Fetch notifications on load
                 }
             } catch (error) {
                 localStorage.removeItem('token');
@@ -33,6 +30,15 @@ export const AuthProvider = ({ children }) => {
             }
         }
         setLoading(false);
+    };
+
+    const fetchUnreadNotifications = async () => {
+        try {
+            const res = await api.get('/notifications/unread-count');
+            setUnreadNotifications(res.data.count);
+        } catch (error) {
+            console.error("Failed to fetch notification count", error);
+        }
     };
 
     const login = async (email, password) => {
@@ -46,6 +52,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             setUser(res.data.user);
+            fetchUnreadNotifications();
         }
 
         return { success: true, data: res.data };
@@ -64,6 +71,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('token', res.data.token);
                 localStorage.setItem('user', JSON.stringify(res.data.user));
                 setUser(res.data.user);
+                fetchUnreadNotifications();
             }
             return { success: true, data: res.data };
         } catch (error) {
@@ -79,6 +87,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             setUser(res.data.user);
+            fetchUnreadNotifications();
         }
 
         return res.data;
@@ -88,6 +97,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
+        setUnreadNotifications(0);
     };
 
     const fetchUserData = async () => {
@@ -95,6 +105,7 @@ export const AuthProvider = ({ children }) => {
             const res = await api.get('/users/me');
             setUser(res.data);
             localStorage.setItem('user', JSON.stringify(res.data));
+            fetchUnreadNotifications(); // Also refresh notifications
             return res.data;
         } catch (error) {
             console.error("Failed to fetch user data", error);
@@ -113,7 +124,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, verifyOtp, logout, loading, updateUser, fetchUserData, googleLogin, t }}>
+        <AuthContext.Provider value={{ user, login, verifyOtp, logout, loading, updateUser, fetchUserData, googleLogin, unreadNotifications, fetchUnreadNotifications, t }}>
             {children}
         </AuthContext.Provider>
     );

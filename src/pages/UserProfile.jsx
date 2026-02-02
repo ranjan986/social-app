@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 const UserProfile = () => {
     const { id } = useParams();
-    const { user: currentUser, updateUser, t } = useAuth();
+    const { user: currentUser, updateUser, t, fetchUserData } = useAuth();
     const [profileUser, setProfileUser] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -50,27 +50,20 @@ const UserProfile = () => {
             if (action === 'request') {
                 await api.post(`/users/${id}/request`);
                 setFriendStatus('sent');
-                // Update local user state
-                const updatedSent = [...(currentUser.sentFriendRequests || []), id];
-                updateUser({ ...currentUser, sentFriendRequests: updatedSent });
+                await fetchUserData(); // Sync state
             } else if (action === 'accept') {
                 await api.post(`/users/${id}/accept`);
                 setFriendStatus('connected');
-                const updatedFriends = [...(currentUser.friends || []), id];
-                // Remove from requests
-                const updatedRequests = (currentUser.friendRequests || []).filter(reqId => reqId !== id);
-                updateUser({ ...currentUser, friends: updatedFriends, friendRequests: updatedRequests });
-                fetchProfile();
+                await fetchUserData(); // Sync state
+                fetchProfile(); // Refresh profile user stats
             } else if (action === 'reject') {
                 await api.delete(`/users/${id}/reject`);
                 setFriendStatus('none');
-                const updatedRequests = (currentUser.friendRequests || []).filter(reqId => reqId !== id);
-                updateUser({ ...currentUser, friendRequests: updatedRequests });
+                await fetchUserData();
             } else if (action === 'cancel') {
                 await api.delete(`/users/${id}/cancel`);
                 setFriendStatus('none');
-                const updatedSent = (currentUser.sentFriendRequests || []).filter(reqId => reqId !== id);
-                updateUser({ ...currentUser, sentFriendRequests: updatedSent });
+                await fetchUserData();
             }
         } catch (err) {
             console.error("Friend request error:", err);

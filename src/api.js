@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'https://social-backend-z05m.onrender.com/api',
 });
 
 // Add a request interceptor to add the auth token to every request

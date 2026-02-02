@@ -6,7 +6,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { X, Globe, Shield, Clock, Gift, ChevronRight, LogOut, Check } from 'lucide-react';
 
 const SettingsModal = ({ isOpen, onClose }) => {
-    const { user, updateUser, logout } = useAuth();
+    const { user, updateUser, logout, t } = useAuth();
     const [activeTab, setActiveTab] = useState('main'); // main, language, privacy, history, points
 
     // Privacy State
@@ -189,7 +189,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                             ← Back
                         </button>
                     ) : (
-                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Settings</h3>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('settings')}</h3>
                     )}
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
                         <X size={24} />
@@ -204,7 +204,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <button className="settings-item" onClick={() => setActiveTab('language')}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <Globe size={20} /> Language
+                                    <Globe size={20} /> {t('language')}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
                                     {lang.toUpperCase()} <ChevronRight size={16} />
@@ -239,7 +239,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
 
                             <button className="settings-item" onClick={logout} style={{ color: '#ef4444' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <LogOut size={20} /> Log Out
+                                    <LogOut size={20} /> {t('logout')}
                                 </div>
                             </button>
                         </div>

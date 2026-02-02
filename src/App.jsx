@@ -12,6 +12,7 @@ import Questions from './pages/Questions';
 import Leaderboard from './pages/Leaderboard';
 import UserProfile from './pages/UserProfile';
 import Reels from './pages/Reels';
+import Notifications from './pages/Notifications';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -73,6 +74,12 @@ function App() {
             <Route path="/user/:id" element={
               <PrivateRoute>
                 <UserProfile />
+              </PrivateRoute>
+            } />
+
+            <Route path="/notifications" element={
+              <PrivateRoute>
+                <Notifications />
               </PrivateRoute>
             } />
           </Routes>

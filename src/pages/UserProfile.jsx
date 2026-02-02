@@ -6,12 +6,12 @@ import { useAuth } from '../context/AuthContext';
 
 const UserProfile = () => {
     const { id } = useParams();
-    const { user: currentUser, updateUser } = useAuth();
+    const { user: currentUser, updateUser, t } = useAuth();
     const [profileUser, setProfileUser] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [friendStatus, setFriendStatus] = useState('none'); // none, sent, connected
+    const [friendStatus, setFriendStatus] = useState('none'); // none, sent, received, connected
 
     useEffect(() => {
         fetchProfile();
@@ -27,6 +27,10 @@ const UserProfile = () => {
             // Check friend status
             if (currentUser?.friends?.includes(id)) {
                 setFriendStatus('connected');
+            } else if (currentUser?.sentFriendRequests?.includes(id)) {
+                setFriendStatus('sent');
+            } else if (currentUser?.friendRequests?.includes(id)) {
+                setFriendStatus('received');
             }
 
             // Fetch posts if public or friend
@@ -41,17 +45,36 @@ const UserProfile = () => {
         }
     };
 
-    const handleAddFriend = async () => {
+    const handleConnect = async (action) => {
         try {
-            await api.post(`/users/add-friend/${id}`);
-            setFriendStatus('connected');
-            // Update current user state to include new friend
-            const updatedFriends = [...(currentUser.friends || []), id];
-            updateUser({ ...currentUser, friends: updatedFriends });
-            alert('Friend added successfully!');
-            fetchProfile(); // Refresh
+            if (action === 'request') {
+                await api.post(`/users/${id}/request`);
+                setFriendStatus('sent');
+                // Update local user state
+                const updatedSent = [...(currentUser.sentFriendRequests || []), id];
+                updateUser({ ...currentUser, sentFriendRequests: updatedSent });
+            } else if (action === 'accept') {
+                await api.post(`/users/${id}/accept`);
+                setFriendStatus('connected');
+                const updatedFriends = [...(currentUser.friends || []), id];
+                // Remove from requests
+                const updatedRequests = (currentUser.friendRequests || []).filter(reqId => reqId !== id);
+                updateUser({ ...currentUser, friends: updatedFriends, friendRequests: updatedRequests });
+                fetchProfile();
+            } else if (action === 'reject') {
+                await api.delete(`/users/${id}/reject`);
+                setFriendStatus('none');
+                const updatedRequests = (currentUser.friendRequests || []).filter(reqId => reqId !== id);
+                updateUser({ ...currentUser, friendRequests: updatedRequests });
+            } else if (action === 'cancel') {
+                await api.delete(`/users/${id}/cancel`);
+                setFriendStatus('none');
+                const updatedSent = (currentUser.sentFriendRequests || []).filter(reqId => reqId !== id);
+                updateUser({ ...currentUser, sentFriendRequests: updatedSent });
+            }
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to add friend');
+            console.error("Friend request error:", err);
+            alert('Request failed: ' + (err.response?.data?.message || err.message));
         }
     };
 
@@ -61,61 +84,81 @@ const UserProfile = () => {
     return (
         <div className="container">
             <div className="card glass fade-in" style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <div style={{ position: 'relative' }}>
-                        {profileUser.avatar ? (
-                            <img
-                                src={profileUser.avatar}
-                                alt={profileUser.name}
-                                style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
-                            />
-                        ) : (
-                            <div style={{
-                                width: '120px', height: '120px', borderRadius: '50%',
-                                background: 'var(--gradient-primary)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '3rem', fontWeight: 'bold'
-                            }}>
-                                {profileUser.name?.[0]?.toUpperCase()}
-                            </div>
-                        )}
+                <div className="profile-header" style={{ marginBottom: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <div style={{ position: 'relative' }}>
+                            {profileUser.avatar ? (
+                                <img
+                                    src={profileUser.avatar}
+                                    alt={profileUser.name}
+                                    style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary)' }}
+                                />
+                            ) : (
+                                <div style={{
+                                    width: '120px', height: '120px', borderRadius: '50%',
+                                    background: 'var(--gradient-primary)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '3rem', fontWeight: 'bold'
+                                }}>
+                                    {profileUser.name?.[0]?.toUpperCase()}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div style={{ flex: 1, minWidth: '250px' }}>
+                    <div className="info-col">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
                             <h1 style={{ margin: 0, fontSize: '2rem' }}>{profileUser.name}</h1>
                             {profileUser.isPrivate && <Lock size={20} color="#94a3b8" title="Private Profile" />}
                         </div>
                         <p style={{ color: '#94a3b8', margin: '0 0 1rem 0' }}>{profileUser.email.replace(/(.{3})(.*)(?=@)/, "$1***")}</p>
 
-                        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                        {profileUser.bio && (
+                            <div style={{ color: 'var(--text-main)', marginBottom: '1.5rem', whiteSpace: 'pre-wrap' }}>
+                                {profileUser.bio}
+                            </div>
+                        )}
+
+                        <div className="stats-row" style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
                             <div>
                                 <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 'bold' }}>{profileUser.points || 0}</span>
-                                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Points</span>
+                                <span style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'capitalize' }}>{t('points')}</span>
                             </div>
                             <div>
                                 <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 'bold' }}>{profileUser.friends?.length || profileUser.friendsCount || 0}</span>
-                                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Friends</span>
+                                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{t('friends')}</span>
                             </div>
                             <div>
                                 <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 'bold' }}>{posts.length}</span>
-                                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Posts</span>
+                                <span style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'capitalize' }}>{t('posts')}</span>
                             </div>
                         </div>
 
                         {id !== currentUser?.id && (
-                            <button
-                                onClick={handleAddFriend}
-                                disabled={friendStatus === 'connected'}
-                                className={`btn ${friendStatus === 'connected' ? 'btn-outline' : 'btn-primary'}`}
-                                style={{ padding: '0.5rem 1.5rem' }}
-                            >
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 {friendStatus === 'connected' ? (
-                                    <><Check size={18} /> Friends</>
+                                    <button className="btn btn-outline" style={{ padding: '0.5rem 1.5rem', cursor: 'default' }}>
+                                        <Check size={18} /> Friends
+                                    </button>
+                                ) : friendStatus === 'sent' ? (
+                                    <button onClick={() => handleConnect('cancel')} className="btn btn-outline" style={{ padding: '0.5rem 1.5rem' }}>
+                                        Cancel Request
+                                    </button>
+                                ) : friendStatus === 'received' ? (
+                                    <>
+                                        <button onClick={() => handleConnect('accept')} className="btn btn-primary" style={{ padding: '0.5rem 1.5rem' }}>
+                                            Accept
+                                        </button>
+                                        <button onClick={() => handleConnect('reject')} className="btn btn-outline" style={{ padding: '0.5rem 1.5rem', borderColor: '#ef4444', color: '#ef4444' }}>
+                                            Reject
+                                        </button>
+                                    </>
                                 ) : (
-                                    <><UserPlus size={18} /> Add Friend</>
+                                    <button onClick={() => handleConnect('request')} className="btn btn-primary" style={{ padding: '0.5rem 1.5rem' }}>
+                                        <UserPlus size={18} /> Add Friend
+                                    </button>
                                 )}
-                            </button>
+                            </div>
                         )}
                     </div>
                 </div>

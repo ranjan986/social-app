@@ -14,17 +14,25 @@ const TopNav = () => {
             height: '60px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            gap: '12px', // Prevent sticking
+            width: '100%' // Ensure full width for right alignment
         }}>
-            <Link to="/" className="logo">
+            <Link to="/" className="logo" style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: 'var(--text-main)',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap'
+            }}>
                 SocialPlane
             </Link>
 
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                <Link to="/notifications" style={{ color: 'var(--text-main)' }}>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
+                <Link to="/notifications" style={{ color: 'var(--text-main)', display: 'flex' }}>
                     <Heart size={24} />
                 </Link>
-                <Link to="/questions" style={{ color: 'var(--text-main)' }}>
+                <Link to="/questions" style={{ color: 'var(--text-main)', display: 'flex' }}>
                     <MessageCircle size={24} />
                 </Link>
             </div>

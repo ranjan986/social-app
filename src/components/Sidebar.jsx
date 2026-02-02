@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Search, Compass, MessageSquare, Heart, PlusSquare, User, Menu, Film } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,26 @@ const Sidebar = () => {
     const location = useLocation();
     const [showMore, setShowMore] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const res = await api.get('/notifications/unread-count');
+            setUnreadCount(res.data.count);
+        } catch (err) {
+            console.error("Failed to fetch unread count", err);
+        }
+    };
+
+    // Poll for notifications or fetch on mount
+    useEffect(() => {
+        if (user) fetchUnreadCount();
+        // Optional: Set interval for polling
+        const interval = setInterval(() => {
+            if (user) fetchUnreadCount();
+        }, 30000); // Check every 30 seconds
+        return () => clearInterval(interval);
+    }, [user]);
 
     const isActive = (path) => location.pathname === path;
 
@@ -21,7 +41,28 @@ const Sidebar = () => {
         { icon: <Compass size={28} strokeWidth={isActive('/community') ? 3 : 2} />, label: "Explore", path: "/community" },
         { icon: <Film size={28} strokeWidth={isActive('/reels') ? 3 : 2} />, label: "Reels", path: "/reels" },
         { icon: <MessageSquare size={28} strokeWidth={isActive('/questions') ? 3 : 2} />, label: "Messages", path: "/questions" }, // Using Questions as Messages placeholder
-        { icon: <Heart size={28} />, label: "Notifications", path: "/notifications" },
+        { icon: <MessageSquare size={28} strokeWidth={isActive('/questions') ? 3 : 2} />, label: "Messages", path: "/questions" }, // Using Questions as Messages placeholder
+        {
+            icon: (
+                <div style={{ position: 'relative' }}>
+                    <Heart size={28} />
+                    {unreadCount > 0 && (
+                        <span style={{
+                            position: 'absolute',
+                            top: -2,
+                            right: -2,
+                            width: '10px',
+                            height: '10px',
+                            backgroundColor: '#ef4444',
+                            borderRadius: '50%',
+                            border: '2px solid var(--bg-dark)'
+                        }} />
+                    )}
+                </div>
+            ),
+            label: "Notifications",
+            path: "/notifications"
+        },
     ];
 
     return (

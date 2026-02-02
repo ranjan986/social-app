@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import api from '../api';
+import { translations } from '../utils/translations';
 
 const AuthContext = createContext();
 
@@ -106,8 +107,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
     };
 
+    const t = (key) => {
+        const lang = user?.preferredLanguage || 'en';
+        return translations[lang]?.[key] || translations['en'][key] || key;
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, verifyOtp, logout, loading, updateUser, fetchUserData, googleLogin }}>
+        <AuthContext.Provider value={{ user, login, verifyOtp, logout, loading, updateUser, fetchUserData, googleLogin, t }}>
             {children}
         </AuthContext.Provider>
     );

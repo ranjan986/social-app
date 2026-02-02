@@ -25,11 +25,13 @@ const Rightbar = () => {
 
     const handleFollow = async (userId) => {
         try {
-            await api.post(`/users/${userId}/add`);
+            await api.post(`/users/${userId}/request`);
             // Remove from suggestions list
             setSuggestions(suggestions.filter(user => user._id !== userId));
+            alert("Friend request sent!");
         } catch (err) {
-            console.error("Failed to follow user", err);
+            console.error("Failed to send request", err);
+            alert(err.response?.data?.message || 'Failed to send request');
         }
     };
 
@@ -107,7 +109,7 @@ const Rightbar = () => {
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    Follow
+                                    Add Friend
                                 </button>
                             </Link>
                         ))

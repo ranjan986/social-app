@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MessageSquare, AlertCircle, Crown, Send, ThumbsUp, ThumbsDown, Trash2, Award } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Questions = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [questions, setQuestions] = useState([]);
     const [questionText, setQuestionText] = useState('');
     const [loading, setLoading] = useState(false);
@@ -74,6 +75,14 @@ const Questions = () => {
 
     const handleAskQuestion = async (e) => {
         e.preventDefault();
+
+        if (!canAsk) {
+            if (window.confirm("You've reached your daily question limit. Upgrade to ask more?")) {
+                navigate('/subscription');
+            }
+            return;
+        }
+
         if (!questionText.trim() || questionText.length < 10) {
             setError('Question must be at least 10 characters long.');
             return;
@@ -185,7 +194,7 @@ const Questions = () => {
                                 <button
                                     type="submit"
                                     className="btn btn-primary"
-                                    disabled={!canAsk || loading || questionText.length < 10}
+                                    disabled={loading || (!canAsk && false)} // Keep enabled to allow click for redirect
                                     style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                 >
                                     <Send size={18} />

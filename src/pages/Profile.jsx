@@ -5,7 +5,7 @@ import { Camera, Trash2, Edit2, Grid, Play, Settings, MapPin, Link as LinkIcon }
 import SettingsModal from '../components/SettingsModal';
 
 const Profile = () => {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, t } = useAuth();
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -14,6 +14,7 @@ const Profile = () => {
     // Profile Edit State
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [newName, setNewName] = useState(user?.name || '');
+    const [newBio, setNewBio] = useState(user?.bio || '');
     const [uploading, setUploading] = useState(false);
 
 
@@ -34,6 +35,8 @@ const Profile = () => {
 
         if (user) {
             fetchUserPosts();
+            setNewName(user.name || '');
+            setNewBio(user.bio || '');
         }
     }, [user]);
 
@@ -69,7 +72,7 @@ const Profile = () => {
     const handleUpdateProfile = async () => {
         if (!newName.trim()) return;
         try {
-            const res = await api.put('/users/update', { name: newName });
+            const res = await api.put('/users/update', { name: newName, bio: newBio });
             updateUser(res.data.user);
             setShowEditProfile(false);
         } catch (err) {
@@ -88,14 +91,7 @@ const Profile = () => {
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
             {/* Profile Header */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: '150px 1fr',
-                gap: '30px',
-                marginBottom: '40px',
-                alignItems: 'start'
-            }} className="profile-header">
-
+            <div className="profile-header">
                 {/* Avatar Column */}
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <div style={{ position: 'relative', width: '150px', height: '150px' }}>
@@ -124,10 +120,9 @@ const Profile = () => {
                 </div>
 
                 {/* Info Column */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
+                <div className="info-col" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {/* Top Row: Username + Edit + Settings */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: '300', margin: 0 }}>{user?.name?.toLowerCase().replace(/\s+/g, '_') || 'user'}</h2>
 
                         {showEditProfile ? (
@@ -148,7 +143,7 @@ const Profile = () => {
                                 padding: '6px 16px',
                                 fontWeight: '600',
                                 fontSize: '0.9rem'
-                            }}>Edit profile</button>
+                            }}>{t('editProfile')}</button>
                         )}
 
                         <button onClick={() => setIsSettingsOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
@@ -157,50 +152,37 @@ const Profile = () => {
                     </div>
 
                     {/* Middle Row: Stats */}
-                    <div style={{ display: 'flex', gap: '40px', fontSize: '1rem' }}>
-                        <span><strong>{posts.length}</strong> posts</span>
-                        <span><strong>{user?.friends?.length || 0}</strong> followers</span>
-                        <span><strong>{user?.points || 0}</strong> points</span>
+                    <div className="stats-row" style={{ display: 'flex', gap: '40px', fontSize: '1rem' }}>
+                        <span><strong>{posts.length}</strong> {t('posts')}</span>
+                        <span><strong>{user?.friends?.length || 0}</strong> {t('friends')}</span>
+                        <span><strong>{user?.points || 0}</strong> {t('points')}</span>
                     </div>
-                </div>
 
-                {/* Bottom Row: Name + Bio */}
-                <div>
-                    <div style={{ fontWeight: '600' }}>{user?.name}</div>
-                    <div style={{ color: 'var(--text-main)', marginTop: '4px' }}>
-                        Creating content & building dreams ✨ <br />
-                        DM for collab 📩
+                    {/* Bottom Row: Name + Bio */}
+                    <div>
+                        <div style={{ fontWeight: '600' }}>{user?.name}</div>
+                        {showEditProfile ? (
+                            <textarea
+                                className="input-field"
+                                value={newBio}
+                                onChange={(e) => setNewBio(e.target.value)}
+                                placeholder="Write your bio..."
+                                style={{
+                                    width: '100%',
+                                    marginTop: '8px',
+                                    minHeight: '60px',
+                                    resize: 'none',
+                                    fontSize: '0.9rem'
+                                }}
+                            />
+                        ) : (
+                            <div style={{ color: 'var(--text-main)', marginTop: '4px', whiteSpace: 'pre-wrap' }}>
+                                {user?.bio || "Creating content & building dreams ✨\nDM for collab 📩"}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-
-
-            {/* Mobile Stats (Visible only on small screens) */}
-            <style>{`
-                @media (max-width: 768px) {
-                    .profile-header {
-                        grid-template-columns: 1fr !important;
-                        gap: 20px !important;
-                        text-align: left;
-                    }
-                    .profile-header > div:first-child {
-                        justify-content: flex-start !important; /* Move avatar to left on mobile too? Or center? Instagram moves to left with stats on right. Lets keep simple col for now */
-                        margin-bottom: 0;
-                    }
-                     /* Instagram Mobile Layout: 
-                        Row 1: Avatar (Left), Stats (Right).
-                        Row 2: Bio.
-                        Let's approximate:
-                     */
-                    .profile-header {
-                        display: flex !important;
-                        flex-direction: column;
-                    }
-                    .profile-header > div:nth-child(2) {
-                        width: 100%;
-                    }
-                }
-            `}</style>
 
             {/* Tabs */}
             <div style={{ borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', gap: '60px' }}>
@@ -212,7 +194,7 @@ const Profile = () => {
                         display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginTop: '-1px', fontSize: '0.8rem', letterSpacing: '1px'
                     }}
                 >
-                    <Grid size={12} /> POSTS
+                    <Grid size={12} /> {t('posts').toUpperCase()}
                 </button>
                 <button
                     onClick={() => setActiveTab('reels')}
@@ -222,16 +204,12 @@ const Profile = () => {
                         display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginTop: '-1px', fontSize: '0.8rem', letterSpacing: '1px'
                     }}
                 >
-                    <Play size={12} /> REELS
+                    <Play size={12} /> {t('reels').toUpperCase()}
                 </button>
             </div>
 
             {/* Content Grid */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '4px' // Instagram uses small gaps
-            }}>
+            <div className="profile-grid">
                 {loadingPosts ? (
                     <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading...</div>
                 ) : posts.length === 0 ? (
@@ -284,12 +262,6 @@ const Profile = () => {
                     ))
                 )}
             </div>
-
-            <style>{`
-                .group:hover .hover-overlay {
-                    display: flex !important;
-                }
-            `}</style>
         </div>
     );
 };

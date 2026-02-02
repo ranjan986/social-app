@@ -1,117 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import api from '../api';
-import { Mail, ArrowLeft, Phone } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { auth } from '../firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
 const ForgotPassword = () => {
-    const [method, setMethod] = useState('email'); // 'email' or 'phone'
-    const [inputValue, setInputValue] = useState('');
+    const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [status, setStatus] = useState('idle');
-
-    // Phone / OTP States
-    const [showOtp, setShowOtp] = useState(false);
-    const [otp, setOtp] = useState('');
-    const [confirmationResult, setConfirmationResult] = useState(null);
-
-    useEffect(() => {
-        if (window.location.hostname === 'localhost') {
-            auth.settings.appVerificationDisabledForTesting = true;
-        }
-
-        // Cleanup global verifier on mount/unmount
-        if (window.recaptchaVerifier) {
-            try { window.recaptchaVerifier.clear(); } catch (e) { }
-            window.recaptchaVerifier = null;
-        }
-        return () => {
-            if (window.recaptchaVerifier) {
-                try { window.recaptchaVerifier.clear(); } catch (e) { }
-                window.recaptchaVerifier = null;
-            }
-        };
-    }, []);
-
-    // Setup ReCaptcha
-    const setupRecaptcha = () => {
-        if (!window.recaptchaVerifier) {
-            const container = document.getElementById('recaptcha-container');
-            if (container) container.innerHTML = '';
-
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'invisible',
-            });
-        }
-    };
-
-    const handleSendPhoneOtp = async () => {
-        setupRecaptcha();
-        const appVerifier = window.recaptchaVerifier;
-
-        try {
-            // Must be in E.164 format (e.g., +919999999999)
-            const phoneNumber = inputValue.includes('+') ? inputValue : `+91${inputValue}`;
-
-            const confirmation = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-            setConfirmationResult(confirmation);
-            setShowOtp(true);
-            setMessage(`OTP Initiated. If using a Test Number, enter your Test Code (No SMS will be sent).`);
-            setStatus('success');
-        } catch (error) {
-            console.error(error);
-            let msg = error.message;
-            if (error.code === 'auth/billing-not-enabled' || error.code === 'auth/too-many-requests') {
-                // Demo Mode Fallback
-                setMessage(`⚠️ Limit Reached/Billing disabled. DEMO MODE ACTIVATED.\nUse Code: 123456 to reset.`);
-                setStatus('success'); // Yellow/Green warning
-                setConfirmationResult({
-                    confirm: async (code) => {
-                        if (code === '123456') return { user: { phoneNumber: inputValue } };
-                        throw new Error('Invalid Demo Code');
-                    }
-                });
-                setShowOtp(true);
-                return;
-            } else if (error.code === 'auth/quota-exceeded') {
-                msg = "SMS Quota Exceeded.";
-            } else if (error.code === 'auth/captcha-check-failed') {
-                msg = "Recaptcha verification failed. Please try again.";
-            }
-            setMessage("Failed: " + msg);
-            setStatus('error');
-
-            // Clear recaptcha
-            if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.clear();
-                window.recaptchaVerifier = null;
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async () => {
-        setLoading(true);
-        try {
-            await confirmationResult.confirm(otp);
-            // Validated!
-            // Now call backend to reset password knowing user verified phone
-            const phoneNumber = inputValue.includes('+') ? inputValue : `+91${inputValue}`;
-            const res = await api.post('/auth/reset-password-mobile-verified', { phone: phoneNumber });
-
-            setMessage(`Success! ${res.data.message} ${res.data.newPassword ? `Your new password is: ${res.data.newPassword}` : ''}`);
-            setStatus('success');
-            setShowOtp(false); // Done
-        } catch (error) {
-            setMessage("Invalid OTP.");
-            setStatus('error');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -119,14 +15,8 @@ const ForgotPassword = () => {
         setMessage('');
         setStatus('idle');
 
-        if (method === 'phone') {
-            await handleSendPhoneOtp();
-            return;
-        }
-
-        // Email flow matches old backend logic
         try {
-            const res = await api.post('/auth/forgot-password', { email: inputValue });
+            const res = await api.post('/auth/forgot-password', { email });
             setMessage(res.data.message);
             setStatus('success');
         } catch (err) {
@@ -138,88 +28,61 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="card glass fade-in" style={{ width: '100%', maxWidth: '400px' }}>
-                <Link to="/login" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', textDecoration: 'none', marginBottom: '1.5rem' }}>
+        <div className="min-h-[80vh] flex items-center justify-center p-4">
+            <div className="w-full max-w-md glass rounded-xl border border-border-color p-8 animate-fade-in relative overflow-hidden">
+                {/* Decorative background element */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+
+                <Link to="/login" className="inline-flex items-center gap-2 text-text-muted hover:text-text-main mb-8 transition-colors text-sm font-medium">
                     <ArrowLeft size={16} /> Back to Login
                 </Link>
 
-                <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>Reset Password</h2>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                    <button
-                        className={`btn ${method === 'email' ? 'btn-primary' : 'btn-outline'}`}
-                        onClick={() => { setMethod('email'); setMessage(''); setShowOtp(false); }}
-                    >
-                        Email
-                    </button>
-                    <button
-                        className={`btn ${method === 'phone' ? 'btn-primary' : 'btn-outline'}`}
-                        onClick={() => { setMethod('phone'); setMessage(''); setShowOtp(false); }}
-                    >
-                        Phone (Firebase)
-                    </button>
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold mb-2">Reset Password</h2>
+                    <p className="text-text-muted text-sm">
+                        Enter your email address and we'll send you a new password.
+                    </p>
                 </div>
 
                 {message && (
-                    <div style={{
-                        padding: '1rem',
-                        borderRadius: '0.5rem',
-                        marginBottom: '1.5rem',
-                        background: status === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(251, 191, 36, 0.2)',
-                        color: status === 'success' ? '#6ee7b7' : '#fcd34d'
-                    }}>
+                    <div className={`p-4 rounded-lg mb-6 text-sm flex items-center gap-3 ${status === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}`}>
                         {message}
                     </div>
                 )}
 
-                {/* Recaptcha Container for Firebase */}
-                <div id="recaptcha-container"></div>
-
-                {!showOtp ? (
-                    <form onSubmit={handleSubmit}>
-                        <div className="input-group">
-                            <label className="input-label">{method === 'email' ? 'Email Address' : 'Phone Number'}</label>
-                            <div style={{ position: 'relative' }}>
-                                {method === 'email' ?
-                                    <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} /> :
-                                    <Phone size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
-                                }
-                                <input
-                                    type={method === 'email' ? "email" : "text"}
-                                    className="input-field"
-                                    placeholder={method === 'email' ? "you@example.com" : "+919999999999"}
-                                    style={{ paddingLeft: '2.5rem' }}
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    required
-                                />
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-text-main ml-1">
+                            Email Address
+                        </label>
+                        <div className="relative group">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors">
+                                <Mail size={18} />
                             </div>
-                        </div>
-
-                        <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                            {loading ? 'Processing...' : (method === 'phone' ? 'Send OTP' : 'Send Reset Link')}
-                        </button>
-                    </form>
-                ) : (
-                    <div>
-                        <div className="input-group">
-                            <label className="input-label">Enter OTP</label>
                             <input
-                                type="text"
-                                className="input-field"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                placeholder="123456"
+                                type="email"
+                                className="w-full bg-input-bg border border-border-color focus:border-primary rounded-lg px-4 py-3 pl-10 text-text-main placeholder-text-muted transition-all outline-none"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
                             />
-                            <p style={{ fontSize: '0.8rem', color: '#fbbf24', marginTop: '0.5rem' }}>
-                                <b>Test Mode:</b> If using a Test Number, enter your fixed Test Code. No SMS is sent.
-                            </p>
                         </div>
-                        <button onClick={handleVerifyOtp} className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                            {loading ? 'Verifying...' : 'Verify & Reset Password'}
-                        </button>
                     </div>
-                )}
+
+                    <button
+                        type="submit"
+                        className="w-full py-3 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-all shadow-lg shadow-primary/20 active:scale-[0.98]"
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                Processing...
+                            </span>
+                        ) : 'Send Reset Password'}
+                    </button>
+                </form>
             </div>
         </div>
     );

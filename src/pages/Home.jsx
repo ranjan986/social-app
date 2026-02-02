@@ -8,7 +8,7 @@ import EmojiPicker from 'emoji-picker-react';
 
 const Home = () => {
     // ... (existing state)
-    const { user } = useAuth();
+    const { user, t } = useAuth();
     const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState('');
     const [newPostType, setNewPostType] = useState('post'); // 'post' or 'reel'
@@ -180,7 +180,7 @@ const Home = () => {
                         <div style={{ width: '100%' }}>
                             <textarea
                                 className="input-field"
-                                placeholder={canPost ? "What's on your mind? Share text, photos, or videos!" : "You need at least 1 friend to post."}
+                                placeholder={canPost ? t('createPost') : "You need at least 1 friend to post."}
                                 rows="3"
                                 value={newPost}
                                 onChange={(e) => setNewPost(e.target.value)}
@@ -234,7 +234,7 @@ const Home = () => {
                         </div>
 
                         <button className="btn btn-primary" onClick={handlePost} disabled={(!newPost && !selectedFile) || !canPost || uploading}>
-                            {uploading ? 'Posting...' : 'Post'}
+                            {uploading ? t('posting') : t('post')}
                         </button>
                     </div>
                     {!canPost && <p style={{ fontSize: '0.8rem', color: '#fca5a5', marginTop: '0.5rem' }}>Add friends to unlock posting permissions.</p>}

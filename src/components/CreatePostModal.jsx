@@ -79,14 +79,7 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             backdropFilter: 'blur(4px)'
         }} onClick={onClose}>
-            <div style={{
-                background: 'var(--bg-card)',
-                width: '100%', maxWidth: '500px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                display: 'flex', flexDirection: 'column',
-                maxHeight: '90vh'
-            }} onClick={e => e.stopPropagation()}>
+            <div className="create-post-modal" onClick={e => e.stopPropagation()}>
 
                 {/* Header */}
                 <div style={{

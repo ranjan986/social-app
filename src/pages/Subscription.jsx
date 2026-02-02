@@ -92,10 +92,10 @@ const Subscription = () => {
 
             <div style={{ textAlign: 'center', marginBottom: '2rem', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                 <Clock size={20} />
-                <span>Payment Window: 3:00 AM - 10:00 AM IST</span>
+                <span>Payment Window: 10:00 AM - 11:00 AM IST</span>
             </div>
 
-            <div className="grid-cols-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {PLANS.map((plan) => (
                     <div key={plan.name} className="card glass fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
                         {user?.subscription?.plan === plan.name && (

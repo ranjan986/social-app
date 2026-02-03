@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Compass, Film, PlusSquare, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const BottomNav = () => {
+const BottomNav = ({ onCreateClick }) => {
     const { user } = useAuth();
     const location = useLocation();
     const isActive = (path) => location.pathname === path;
@@ -16,7 +16,7 @@ const BottomNav = () => {
             display: 'flex',
             justifyContent: 'space-around',
             alignItems: 'center',
-            zIndex: 100,
+            zIndex: 1300,
             background: 'var(--bg-dark)'
         }}>
             <Link to="/" style={{ color: isActive('/') ? 'white' : 'var(--text-main)' }}>
@@ -31,9 +31,12 @@ const BottomNav = () => {
                 <Film size={28} strokeWidth={isActive('/reels') ? 3 : 2} />
             </Link>
 
-            <Link to="/create" style={{ color: isActive('/create') ? 'white' : 'var(--text-main)' }}>
-                <PlusSquare size={28} strokeWidth={isActive('/create') ? 3 : 2} />
-            </Link>
+            <div
+                onClick={onCreateClick}
+                style={{ color: 'var(--text-main)', cursor: 'pointer' }}
+            >
+                <PlusSquare size={28} strokeWidth={2} />
+            </div>
 
             <Link to="/profile" style={{ color: isActive('/profile') ? 'white' : 'var(--text-main)' }}>
                 {user?.avatar ? (

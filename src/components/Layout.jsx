@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
@@ -5,10 +6,16 @@ import TopNav from './TopNav';
 import Rightbar from './Rightbar';
 import Topbar from './Topbar';
 import { useAuth } from '../context/AuthContext';
+import CreatePostModal from './CreatePostModal';
 
 const Layout = ({ children }) => {
     const { user } = useAuth();
     const location = useLocation();
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+    useEffect(() => {
+        setIsCreateModalOpen(false);
+    }, [location.pathname]);
 
     // Hide navs on auth pages
     if (['/login', '/register', '/forgot-password'].includes(location.pathname)) {
@@ -52,7 +59,7 @@ const Layout = ({ children }) => {
 
                     {/* Mobile Bottom Nav */}
                     <div className="hide-on-desktop">
-                        <BottomNav />
+                        <BottomNav onCreateClick={() => setIsCreateModalOpen(true)} />
                     </div>
                 </div>
 
@@ -61,6 +68,9 @@ const Layout = ({ children }) => {
                     <Rightbar />
                 </div>
             </div>
+
+            {/* Create Post Modal */}
+            <CreatePostModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
         </div>
     );
 };

@@ -25,7 +25,7 @@ const Login = () => {
             setIsRedirecting(true);
             setTimeout(() => {
                 navigate('/');
-            }, 2000);
+            }, 3000);
         } catch (err) {
             console.error("Google Login UI Error:", err);
             setError(err.message || 'Google Login failed');
@@ -35,25 +35,19 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
-        console.log("Login submitted");
 
         try {
             const res = await login(email, password);
-            console.log("Login response:", res);
 
             if (res.requiresOtp) {
-                console.log("Requires OTP");
                 setStep(2);
             } else {
-                console.log("Starting redirect animation...");
                 setIsRedirecting(true);
                 setTimeout(() => {
-                    console.log("Navigating to home");
                     navigate('/');
-                }, 2000);
+                }, 3000);
             }
         } catch (err) {
-            console.error("Login flow error:", err);
             setError(err.response?.data?.message || 'Login failed');
         }
     };
@@ -65,7 +59,7 @@ const Login = () => {
             setIsRedirecting(true);
             setTimeout(() => {
                 navigate('/');
-            }, 2000);
+            }, 3000);
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid OTP');
         }

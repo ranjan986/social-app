@@ -11,6 +11,7 @@ const Login = () => {
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState(1); // 1: Login, 2: OTP
     const [error, setError] = useState('');
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     const { login, verifyOtp, googleLogin } = useAuth();
     const navigate = useNavigate();
@@ -21,7 +22,10 @@ const Login = () => {
         try {
             const result = await signInWithPopup(auth, provider);
             await googleLogin(result.user);
-            navigate('/');
+            setIsRedirecting(true);
+            setTimeout(() => {
+                navigate('/');
+            }, 2000);
         } catch (err) {
             console.error("Google Login UI Error:", err);
             setError(err.message || 'Google Login failed');
@@ -31,20 +35,25 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
+        console.log("Login submitted");
 
         try {
             const res = await login(email, password);
-            // Wait, standard login throws if failed? 
-            // api.post implementation in context should handle errors or rethrow.
-            // I need to update AuthContext to throw or return error. 
-            // Assuming api.js throws on 401.
+            console.log("Login response:", res);
 
             if (res.requiresOtp) {
+                console.log("Requires OTP");
                 setStep(2);
             } else {
-                navigate('/');
+                console.log("Starting redirect animation...");
+                setIsRedirecting(true);
+                setTimeout(() => {
+                    console.log("Navigating to home");
+                    navigate('/');
+                }, 2000);
             }
         } catch (err) {
+            console.error("Login flow error:", err);
             setError(err.response?.data?.message || 'Login failed');
         }
     };
@@ -53,11 +62,31 @@ const Login = () => {
         e.preventDefault();
         try {
             await verifyOtp(email, otp);
-            navigate('/');
+            setIsRedirecting(true);
+            setTimeout(() => {
+                navigate('/');
+            }, 2000);
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid OTP');
         }
     };
+
+    if (isRedirecting) {
+        return (
+            <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[9999]">
+                <div className="text-center">
+                    <div className="inline-block relative">
+                        <div className="h-16 w-16 rounded-full border-4 border-primary/30 border-t-primary animate-spin mb-6"></div>
+                        <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-transparent border-b-secondary/50 animate-pulse"></div>
+                    </div>
+                    <h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-tr from-[#0095f6] to-[#e1306c] bg-clip-text text-transparent tracking-tight animate-pulse">
+                        SocialPlane
+                    </h1>
+                    <p className="text-gray-400 text-sm font-medium">Preparing your feed...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4">

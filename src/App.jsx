@@ -73,7 +73,7 @@ function App() {
             } />
             <Route path="/user/:id" element={
               <PrivateRoute>
-                <UserProfile />
+                <UserProfile key={window.location.pathname} />
               </PrivateRoute>
             } />
 

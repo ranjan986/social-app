@@ -24,9 +24,16 @@ export const AuthProvider = ({ children }) => {
                     setUser(JSON.parse(storedUser));
                     fetchUnreadNotifications(); // Fetch notifications on load
                 }
+                // ALWAYS fetch fresh user data to sync friend count, points, etc.
+                await fetchUserData();
             } catch (error) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                console.error("Session check failed", error);
+                // Only remove token if it's truly invalid (handled by api interceptors usually, but good to be safe)
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    setUser(null);
+                }
             }
         }
         setLoading(false);

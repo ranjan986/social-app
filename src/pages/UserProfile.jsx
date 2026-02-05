@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import { User, MapPin, Calendar, MessageSquare, Heart, Lock, UserPlus, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import FriendsListModal from '../components/FriendsListModal';
 
 const UserProfile = () => {
     const { id } = useParams();
@@ -12,6 +13,7 @@ const UserProfile = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [friendStatus, setFriendStatus] = useState('none'); // none, sent, received, connected
+    const [showFriendsModal, setShowFriendsModal] = useState(false);
 
     useEffect(() => {
         fetchProfile();
@@ -117,7 +119,11 @@ const UserProfile = () => {
                                 <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 'bold' }}>{profileUser.points || 0}</span>
                                 <span style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'capitalize' }}>{t('points')}</span>
                             </div>
-                            <div>
+                            <div
+                                onClick={() => setShowFriendsModal(true)}
+                                style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                                className="hover:opacity-80"
+                            >
                                 <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 'bold' }}>{profileUser.friends?.length || profileUser.friendsCount || 0}</span>
                                 <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{t('friends')}</span>
                             </div>
@@ -194,6 +200,12 @@ const UserProfile = () => {
                     No posts yet.
                 </div>
             )}
+
+            <FriendsListModal
+                isOpen={showFriendsModal}
+                onClose={() => setShowFriendsModal(false)}
+                userId={profileUser._id}
+            />
         </div>
     );
 };

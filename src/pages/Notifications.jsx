@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 import { Heart, MessageCircle, User, UserPlus, Check, X as XIcon, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Notifications = () => {
+    const { fetchUserData } = useAuth(); // Get fetchUserData
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -37,6 +39,9 @@ const Notifications = () => {
             }
             // Remove notification from list or update it
             setNotifications(prev => prev.filter(n => n._id !== notifId));
+
+            // Sync global user state (friends list, etc.)
+            await fetchUserData();
         } catch (err) {
             alert(err.response?.data?.message || 'Action failed');
         }

@@ -41,7 +41,6 @@ const Sidebar = () => {
         { icon: <Compass size={28} strokeWidth={isActive('/community') ? 3 : 2} />, label: "Explore", path: "/community" },
         { icon: <Film size={28} strokeWidth={isActive('/reels') ? 3 : 2} />, label: "Reels", path: "/reels" },
         { icon: <MessageSquare size={28} strokeWidth={isActive('/questions') ? 3 : 2} />, label: "Messages", path: "/questions" }, // Using Questions as Messages placeholder
-        { icon: <MessageSquare size={28} strokeWidth={isActive('/questions') ? 3 : 2} />, label: "Messages", path: "/questions" }, // Using Questions as Messages placeholder
         {
             icon: (
                 <div style={{ position: 'relative' }}>

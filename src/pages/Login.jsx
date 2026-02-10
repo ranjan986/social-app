@@ -25,7 +25,7 @@ const Login = () => {
             setIsRedirecting(true);
             setTimeout(() => {
                 navigate('/');
-            }, 3000);
+            }, 5000);
         } catch (err) {
             console.error("Google Login UI Error:", err);
             setError(err.message || 'Google Login failed');

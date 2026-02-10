@@ -1,16 +1,50 @@
-# React + Vite
+# 🚀 Social App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern social networking web application built with **React & Vite** — allowing users to interact with posts and connect with others.
 
-Currently, two official plugins are available:
+Live Demo: https://social-app-phi-ruby.vercel.app/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 📌 Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Social App** is a frontend React project built using Vite.  
+It showcases a clean UI, interactive user feed, and responsive design — great as a portfolio project to demonstrate your React skills and front-end development capabilities.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠️ Tech Stack
+
+- **Frontend:** React  
+- **Bundler:** Vite  
+- **Languages:** JavaScript, HTML, CSS  
+- **Styling:** CSS Modules / Tailwind (if used)  
+- **Deployment:** Vercel
+
+---
+
+## ✨ Features
+
+✔ Fast, responsive UI  
+✔ Dynamic feed layout  
+✔ Smooth transitions & animations  
+✔ Deployed live on Vercel  
+✔ Ready to integrate backend APIs
+
+---
+
+## 📸 Screenshots
+
+<center>
+  <img src="Social-App.png" alt="Social App Preview" width="700" />
+</center>
+
+*(Add more screenshots showing different parts of the app — mobile view, feed, etc.)*
+
+---
+
+## 🧑‍💻 How to Run Locally
+
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/ranjan986/social-app.git

@@ -59,7 +59,8 @@
 <!-- ================= SCREENSHOTS ================= -->
 <h2 style="color:#58a6ff;">📸 Screenshots</h2>
 <p align="center">
-  <img src="<img width="1864" height="914" alt="social" src="https://github.com/user-attachments/assets/905e4f6e-696f-4bd1-ac50-afbaaf94f1cb" />
+  <img src="social.png
+    " />
 " />
 " width="800" alt="Social App Homepage">
 </p>

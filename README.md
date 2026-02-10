@@ -59,14 +59,8 @@
 <!-- ================= SCREENSHOTS ================= -->
 <h2 style="color:#58a6ff;">📸 Screenshots</h2>
 <p align="center">
-  <img src="screenshot-1.png" width="800" alt="Social App Homepage">
-</p>
-<p align="center">
-  <img src="screenshot-2.png" width="800" alt="Social App Feed View">
-</p>
-
-<p style="font-size:14px;" align="center">
-  *(Add more screenshots for mobile + desktop views)*
+  <img src="<img width="1864" height="914" alt="Screenshot 2026-02-06 203611" src="https://github.com/user-attachments/assets/491ae3f9-62f3-46bf-ab3b-8f8a90207fc4" />
+" width="800" alt="Social App Homepage">
 </p>
 
 <hr/>
